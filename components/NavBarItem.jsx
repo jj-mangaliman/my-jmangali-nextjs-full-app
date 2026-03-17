@@ -9,7 +9,7 @@ const NavBarItem = ({ children, href, className, icon, tabIndex, testId }) => {
 
   return (
     <span className="d-inline-flex align-items-center navbar-item">
-      {icon && <FontAwesomeIcon icon={icon} className="mr-3" />}
+      {icon && Object.keys(icon).length > 0 && <FontAwesomeIcon icon={icon} className="mr-3" />}
       <span className={pathname === href ? activeClasses : className} tabIndex={tabIndex} data-testid={testId}>
         {children}
       </span>

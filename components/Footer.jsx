@@ -1,6 +1,7 @@
 
 const Footer = () => (
   <footer color="white" light expand="md" className="bg-light p-3 text-center" data-testid="footer">
+    
     <img
       src="https://myjmangalinextjs.blob.core.windows.net/assets/3_yellow_umbrella_logo.svg"  // CDN image URL
       alt="Footer Logo"

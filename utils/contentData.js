@@ -1,27 +1,27 @@
 const contentData = [
   {
-    title: 'Configure Other Identity Providers',
-    link: 'https://auth0.com/docs/identityproviders',
+    title: 'Interact with Claude Web Chat',
+    link: 'https://claude.com/product/overview',
     description:
-      'Auth0 supports social providers as Facebook, Twitter, Instagram and 100+, Enterprise providers as Microsoft Office 365, Google Apps, Azure, and more. You can also use any OAuth2 Authorization Server.'
+      'An AI assistant you can ask questions to whenever you are stuck or need clarification on the results of your configuration changes.'
   },
   {
-    title: 'Enable Multifactor Authentication',
+    title: 'Tenant Configuration',
     link: 'https://auth0.com/docs/mfa',
     description:
-      'Add an extra layer of security by enabling Multi-factor Authentication, requiring your users to provide more than one piece of identifying information. Push notifications, authenticator apps, SMS, and DUO Security are supported.'
+      'Shows you real-time information about your system and its current status'
   },
   {
-    title: 'Attack Protection',
-    link: 'https://auth0.com/docs/attack-protection',
+    title: 'Compliance Guide',
+    link: 'https://github.com/usnistgov/OSCAL',
     description:
-      'Auth0 can detect anomalies and stop malicious attempts to access your application. Attack protection can alert you and your users of suspicious activity, as well as block further login attempts.'
+      'Explains NIST rules in simple terms.  Later, you can also ask questions on possible configuration changes that can be validated against our internal standards and controls (disclaimer: as this is exposed to internet ether, we did not want to add this information)'
   },
   {
-    title: 'Learn About Rules',
-    link: 'https://auth0.com/docs/rules',
+    title: 'Auth0 Platform Roadmap',
+    link: 'https://auth0.com/changelog/atom.xml',
     description:
-      "Rules are JavaScript functions that execute when a user authenticates to your application. They run once the authentication process is complete, and you can use them to customize and extend Auth0's capabilities."
+      "Displays upcoming changes and recent updates to the Auth0 platform."
   }
 ];
 
