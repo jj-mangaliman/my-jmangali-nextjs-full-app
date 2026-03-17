@@ -4,8 +4,8 @@ import { auth0 } from "./lib/auth0"
 export async function middleware(request) {
     const authRes = await auth0.middleware(request);
 
-    // authentication routes — let the middleware handle it
-    if (request.nextUrl.pathname.startsWith("/auth")) {
+    // Add the '?' after nextUrl and pathname
+    if (request?.nextUrl?.pathname?.startsWith("/auth")) {
         return authRes;
     }
 
