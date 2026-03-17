@@ -1,4 +1,4 @@
-'use  client';
+'use client';
 
 import React, { useState } from 'react';
 import {
@@ -26,9 +26,30 @@ const NavBar = () => {
 
   return (
     <div className="nav-container" data-testid="navbar">
-      <Navbar color="light" light expand="md">
-        <Container>
-          <NavbarBrand className="logo" />
+      <Navbar color="white" light expand="md">
+        <Container className="d-flex-align-items-center"> {/*Align items verically *}
+          {/* Replace the current NavbarBrand line with this */}
+          <NavbarBrand
+            className="logo"
+            href="/"
+            style={{
+              backgroundImage: 'none', // Kill the Auth0 ghost image
+              display: 'flex',
+              alignItems: 'center',
+              width: 'auto',         // Let your image control the width
+              height: 'auto'         // Let your image control the height
+            }}
+          >
+            <img
+              src="https://myjmangalinextjs.blob.core.windows.net/assets/3_yellow_umbrella_logo.svg"
+              alt="Yellow Umbrella LTD"
+              style={{
+                width: '100px',
+                height: 'auto',      // Maintain aspect ratio
+                objectFit: 'contain'
+              }}
+            />
+          </NavbarBrand>
           <NavbarToggler onClick={toggle} data-testid="navbar-toggle" />
           <Collapse isOpen={isOpen} navbar>
             <Nav className="mr-auto" navbar data-testid="navbar-items">
@@ -63,6 +84,11 @@ const NavBar = () => {
                   <AnchorLink
                     href="/auth/login"
                     className="btn btn-primary btn-margin"
+                    style={{
+                      backgroundColor: '#ffb700 !important',
+                      borderColor: '#ffb700 !important',
+                      color: 'black' // Add text color too
+                    }}
                     tabIndex={0}
                     testId="navbar-login-desktop">
                     Log in
@@ -105,6 +131,11 @@ const NavBar = () => {
                 <AnchorLink
                   href="/auth/login"
                   className="btn btn-primary btn-block"
+                  style={{
+                    backgroundColor: '#ffb700 !important',
+                    borderColor: '#ffb700 !important',
+                    color: 'black' // Add text color too
+                  }}
                   tabIndex={0}
                   testId="navbar-login-mobile">
                   Log in
