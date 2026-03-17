@@ -1,41 +1,34 @@
 import { NextResponse } from "next/server";
-import { auth0 } from "./lib/auth0"
+import { auth0 } from "./lib/auth0"; // Ensure this path is correct
 
 export async function middleware(request) {
+    // 1. Let Auth0 handle its internal routing/session logic first
     const authRes = await auth0.middleware(request);
 
-    // Add the '?' after nextUrl and pathname
-    if (request?.nextUrl?.pathname?.startsWith("/auth")) {
+    const { pathname, origin } = request.nextUrl;
+
+    // 2. Bypass middleware for Auth routes and the Homepage to prevent loops
+    if (pathname.startsWith("/auth") || pathname === "/") {
         return authRes;
     }
 
-    // public routes — no need to check for session
-    if (request.nextUrl.pathname === ("/")) {
-        return authRes;
-    }
+    // 3. Check for the session using the Auth0-provided method
+    // Note: In newer Auth0 SDKs, you often check the session via the response or a specific helper
+    const session = await auth0.getSession(request);
 
-    const { origin } = new URL(request.url)
-    const session = await auth0.getSession()
-
-    // user does not have a session — redirect to login
+    // 4. If no session, redirect to login
     if (!session) {
-        return NextResponse.redirect(`${origin}/auth/login`)
+        return NextResponse.redirect(`${origin}/auth/login`);
     }
 
-    return authRes
+    return authRes;
 }
-
 
 export const config = {
     matcher: [
         /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico, sitemap.xml, robots.txt (metadata files)
-         * - api (API routes)
-         * - auth (authentication routes like /auth/login) <--- ADDED THIS
+         * Match all paths except static assets, APIs, and the auth folder
          */
         "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|api|auth).*)",
     ],
-}
+};
