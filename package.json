@@ -16,6 +16,7 @@
     "cypress:open": "cypress open --browser chrome"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "@auth0/nextjs-auth0": "^4.16.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
