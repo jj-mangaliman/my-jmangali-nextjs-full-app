@@ -61,8 +61,8 @@ const NavBar = () => {
               {user && (
                 <>
                   <NavItem>
-                    <PageLink href="/csr" className="nav-link" testId="navbar-csr">
-                      Client-side rendered page
+                    <PageLink href="/askphoenix" className="nav-link" testId="navbar-askphoenix">
+                      Ask Phoenix
                     </PageLink>
                   </NavItem>
                   <NavItem>
