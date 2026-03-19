@@ -152,6 +152,47 @@ This is the **frontend page** the user interacts with after login:
 
 ---
 
+### Step 6: Moved Chat UI into the CSR Page — `/app/csr/page.jsx`
+
+Rather than keeping the chat at a separate `/chat` route, we moved it into the existing
+**client-side rendered page** so it lives where Auth0-protected CSR content already lives.
+
+- Replaced the boilerplate CSR content with the full Phoenix chat UI
+- Same streaming logic, same system prompt — just a new home
+
+*Status: ✅ Done*
+
+---
+
+### Step 7: Renamed the Navbar Link to "Ask Phoenix"
+
+Updated `components/NavBar.jsx` to change the label from:
+
+```
+Client-side rendered page  →  Ask Phoenix
+```
+
+So logged-in users see **"Ask Phoenix"** in the nav and know exactly what it does.
+
+*Status: ✅ Done*
+
+---
+
+### Step 8: Renamed the Route from `/csr` to `/askphoenix`
+
+Renamed the folder `app/csr/` → `app/askphoenix/` so the URL is meaningful:
+
+```
+Before:  http://localhost:3000/csr
+After:   http://localhost:3000/askphoenix
+```
+
+Also updated the navbar `href` from `/csr` to `/askphoenix` to match.
+
+*Status: ✅ Done*
+
+---
+
 ## Current Status
 
 | Task | Status |
@@ -161,22 +202,27 @@ This is the **frontend page** the user interacts with after login:
 | Add `ANTHROPIC_API_KEY` to `.env.local` | ✅ Done (needs real key) |
 | Create `/app/api/chat/route.js` | ✅ Done |
 | Craft Phoenix system prompt (NIST + Auth0 knowledge) | ✅ Done |
-| Create `/app/chat/page.jsx` | ✅ Done |
+| Move chat UI into CSR page | ✅ Done |
+| Rename navbar link to "Ask Phoenix" | ✅ Done |
+| Rename route to `/askphoenix` | ✅ Done |
+| Push to GitHub | ⏳ Pending |
+| Add `ANTHROPIC_API_KEY` to Vercel env vars | ⏳ Pending |
+| Test end-to-end on Vercel | ⏳ Pending |
 
-## One Thing Left To Do
+## What's Left
 
-Replace the placeholder in `.env.local` with your real Anthropic API key:
+1. **Add your real API key** to `.env.local`:
+   ```env
+   ANTHROPIC_API_KEY=your_real_key_here
+   ```
+   Get it from: https://console.anthropic.com
 
-```env
-ANTHROPIC_API_KEY=your_anthropic_api_key_here  ← replace this
-```
+2. **Push to GitHub** via VS Code Source Control (`Cmd+Shift+G`)
 
-Get your key from: https://console.anthropic.com
+3. **Add `ANTHROPIC_API_KEY`** in Vercel → Settings → Environment Variables
 
-Then run:
-
-```bash
-npm run dev
-```
-
-And visit: `http://localhost:3000/chat`
+4. **Test locally** first:
+   ```bash
+   npm run dev
+   ```
+   Then visit: `http://localhost:3000/askphoenix`
