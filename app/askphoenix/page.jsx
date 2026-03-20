@@ -7,11 +7,30 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 export default function CSRPage() {
-  const { isLoading } = useUser();
+  const { user, isLoading } = useUser();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const bottomRef = useRef(null);
+
+  // On mount: read saved conversation from localStorage for this user
+  useEffect(() => {
+    if (!user?.sub) return;
+    const saved = localStorage.getItem(`phoenix-chat-${user.sub}`);
+    if (saved) setMessages(JSON.parse(saved));
+  }, [user?.sub]);
+
+  // On every message update: persist to localStorage
+  useEffect(() => {
+    if (!user?.sub || messages.length === 0) return;
+    localStorage.setItem(`phoenix-chat-${user.sub}`, JSON.stringify(messages));
+  }, [messages, user?.sub]);
+
+  function clearSession() {
+    if (!user?.sub) return;
+    localStorage.removeItem(`phoenix-chat-${user.sub}`);
+    setMessages([]);
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -62,12 +81,30 @@ export default function CSRPage() {
     }
   }
 
+  function downloadAsMarkdown() {
+    const lines = messages.map((msg) => {
+      const label = msg.role === 'user' ? '## You' : '## Phoenix';
+      return `${label}\n\n${msg.content}`;
+    });
+    const content = `# Phoenix Session\n\n${lines.join('\n\n---\n\n')}`;
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `phoenix-session-${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (isLoading) return <Loading />;
 
   return (
     <>
       <style>{`
-        .phoenix-chat-wrapper {
+        .phoenix-page {
+          display: flex;
+          flex-direction: column;
+          height: calc(100dvh - 64px);
           width: 100%;
           max-width: 800px;
           margin: 0 auto;
@@ -75,11 +112,11 @@ export default function CSRPage() {
           box-sizing: border-box;
         }
         .phoenix-chat-box {
+          flex: 1;
+          min-height: 0;
           border: 1px solid #dee2e6;
           border-radius: 8px;
           padding: 16px;
-          min-height: 50vh;
-          max-height: 65vh;
           overflow-y: auto;
           margin-bottom: 16px;
           background-color: #f8f9fa;
@@ -89,7 +126,7 @@ export default function CSRPage() {
           gap: 8px;
         }
         @media (max-width: 576px) {
-          .phoenix-chat-wrapper {
+          .phoenix-page {
             padding: 16px;
           }
           .phoenix-chat-form {
@@ -101,9 +138,21 @@ export default function CSRPage() {
         }
       `}</style>
 
-      <div data-testid="csr" className="phoenix-chat-wrapper">
-        <h2 style={{ marginBottom: '8px' }}>Got a question for Phoenix?</h2>
-        <p className="text-muted" style={{ marginBottom: '24px' }}>
+      <div data-testid="csr" className="phoenix-page">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+          <h2 style={{ margin: 0 }}>Got a question for Phoenix?</h2>
+          {messages.length > 0 && !isStreaming && (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="btn btn-outline-secondary btn-sm" onClick={downloadAsMarkdown}>
+                ↓ Download session
+              </button>
+              <button className="btn btn-outline-danger btn-sm" onClick={clearSession}>
+                New session
+              </button>
+            </div>
+          )}
+        </div>
+        <p className="text-muted" style={{ marginBottom: '16px' }}>
           Do you have a question about a control, a security requirement, the status of your Auth0 tenant? Phoenix will tell you whether your requirement is possible, whether it conforms with NIST standards (and later our own internal standards). And depending on your access, he may be able to configure your tenant for you! Don&apos;t be shy!
         </p>
 
