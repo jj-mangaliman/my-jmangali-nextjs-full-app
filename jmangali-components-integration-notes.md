@@ -141,6 +141,45 @@ The simple one-shot stream was replaced with an **agentic loop** that handles
 
 ---
 
+## Debugging Log — Ask Phoenix 500 Errors
+
+### What We Saw
+`POST /api/chat` returning 500 errors on Vercel with the message:
+```
+Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+```
+The frontend was receiving an HTML error page instead of a stream.
+
+### What We Ruled Out
+| Suspect | How we ruled it out |
+|---------|-------------------|
+| Missing API key | Added a `GET` debug endpoint — confirmed key present with prefix `sk-ant-api` |
+| Auth0 session bug | Fixed early — `auth0.getSession(request)` needs `request` passed explicitly in Auth0 v4 |
+| Wrong code deployed | Confirmed via Vercel deployment logs that latest commits were live |
+| Timeout | Added `export const maxDuration = 60` to extend function limit from 10s to 60s |
+| web_fetch tool error | Temporarily removed tool — error persisted, ruled out |
+
+### Root Cause
+Added `console.log` step markers to the POST handler. Vercel logs revealed:
+```
+[chat] stream error: 400 {"type":"error","error":{"type":"invalid_request_error",
+"message":"Your credit balance is too low to access the Anthropic API."}}
+```
+**Phoenix was broke.** Zero Anthropic API credits. The SDK threw a 400 error
+inside the `ReadableStream` which Vercel surfaced as a generic 500.
+
+### Solution
+Top up credits at **console.anthropic.com → Plans & Billing**.
+
+### Code State After Debugging
+All diagnostic code removed. Route restored to full production state:
+- `export const maxDuration = 60` — kept (correct for streaming AI responses)
+- `web_fetch` tool — restored
+- Agentic loop — restored
+- System prompt — restored
+
+---
+
 ## Still To Do
 
 | Task | Status |
