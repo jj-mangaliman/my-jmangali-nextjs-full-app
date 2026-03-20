@@ -95,11 +95,15 @@ export async function POST(request) {
 
             const message = await stream.finalMessage();
 
+            console.log(`[chat] stop_reason: ${message.stop_reason}`);
+            console.log(`[chat] content blocks: ${JSON.stringify(message.content.map(b => b.type))}`);
+
             // Natural end — Phoenix is done
             if (message.stop_reason === 'end_turn') break;
 
             // Server-side tool hit iteration limit — append and continue
             if (message.stop_reason === 'pause_turn') {
+              console.log(`[chat] pause_turn hit — continuation ${continuations + 1}`);
               currentMessages = [
                 ...currentMessages,
                 { role: 'assistant', content: message.content },
@@ -109,6 +113,7 @@ export async function POST(request) {
             }
 
             // Any other stop reason — exit
+            console.log(`[chat] unexpected stop_reason — exiting loop`);
             break;
           }
         } catch (err) {
