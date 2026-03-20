@@ -1,5 +1,30 @@
 # Components Integration Notes
 
+## Problem Statement
+
+Developers and product teams building on Auth0 face a recurring challenge:
+they have a frontend business requirement but don't know whether it conflicts
+with NIST 800-63B identity standards, and if not, whether Auth0 supports it
+and how to configure it. This requires cross-referencing NIST documentation,
+Auth0 docs, and implementation guides — a slow, fragmented process.
+
+## Solution We're Exploring
+
+An AI-powered compliance advisor — **Phoenix** — embedded directly into a
+Next.js app behind Auth0 login. A user describes their requirement in plain
+English and Phoenix responds in three structured sections:
+
+1. **NIST Assessment** — does it comply, conflict, or fall outside scope?
+2. **Auth0 Support** — yes / partially / no, and which feature covers it?
+3. **How to Configure in Auth0** — step-by-step guidance
+
+Phase 1 (current): Phoenix answers from training knowledge.
+Phase 2 (next): Phoenix fetches live Auth0 changelog and NIST OSCAL data.
+Phase 3 (future): Phoenix connects to Auth0 via MCP server and FGA to
+actually apply configuration changes on behalf of authorized users.
+
+---
+
 ## Overview
 
 This document tracks the UI and component changes made to the Next.js app
