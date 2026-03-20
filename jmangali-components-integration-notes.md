@@ -99,14 +99,15 @@ arrives fully rendered.
 **Two fixes/upgrades made:**
 
 #### Fix: Auth0 Session Bug
-`auth0.getSession()` was called without the `request` object. In Auth0 v4
-App Router, the request must be passed explicitly:
+`auth0.getSession()` was incorrectly called with `request` as a parameter.
+In Auth0 v4 App Router API routes, `getSession()` uses Next.js cookies()
+internally — no argument needed:
 ```js
-// Before (broken)
-const session = await auth0.getSession();
+// Before (broken — caused 405 Method Not Allowed)
+const session = await auth0.getSession(request);
 
 // After (fixed)
-const session = await auth0.getSession(request);
+const session = await auth0.getSession();
 ```
 
 #### Upgrade: Live Data via web_fetch Tool
@@ -180,13 +181,33 @@ All diagnostic code removed. Route restored to full production state:
 
 ---
 
+### 6. Markdown Rendering — `/app/askphoenix/page.jsx`
+
+**What:** Installed `react-markdown` and replaced raw text rendering of
+Phoenix's responses with proper markdown rendering.
+
+**Why:** Phoenix structures every response with `###` headings and `**bold**`
+text. Without a renderer, these appear as raw symbols — ugly and hard to read.
+
+**What changed:**
+- `npm install react-markdown`
+- Imported `ReactMarkdown` into the chat page
+- User messages render as plain text (correct — they're just questions)
+- Assistant messages render via `<ReactMarkdown>` (headings, bold, lists all work)
+- Removed `whiteSpace: 'pre-wrap'` from assistant bubbles (no longer needed)
+- Cleaned up unused `user` variable from `useUser()` destructuring
+
+---
+
 ## Still To Do
 
 | Task | Status |
 |------|--------|
 | Push all changes to GitHub | ⏳ Pending |
-| Add `ANTHROPIC_API_KEY` to Vercel env vars | ⏳ Pending |
-| Test Phoenix end-to-end on Vercel | ⏳ Pending |
+| Add `ANTHROPIC_API_KEY` to Vercel env vars | ✅ Done |
+| Test Phoenix end-to-end on Vercel | ✅ Working |
+| Add Anthropic API credits | ✅ Done |
+| Markdown rendering for Phoenix responses | ✅ Done |
 | Test live data fetch (Auth0 changelog + NIST) | ⏳ Pending |
 | Create Monica, Rachel, Phoebe in Auth0 | ⏳ Pending |
 | Enable FGA on Auth0 tenant | ⏳ Pending |

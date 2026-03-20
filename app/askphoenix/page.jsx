@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@auth0/nextjs-auth0';
 import Loading from '../../components/Loading';
+import ReactMarkdown from 'react-markdown';
 
 export default function CSRPage() {
-  const { user, isLoading } = useUser();
+  const { isLoading } = useUser();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -64,10 +65,9 @@ export default function CSRPage() {
 
   return (
     <div data-testid="csr" style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
-      <h2 style={{ marginBottom: '8px' }}>Ask Phoenix</h2>
+      <h2 style={{ marginBottom: '8px' }}>Got a question for Phoenix?</h2>
       <p className="text-muted" style={{ marginBottom: '24px' }}>
-        Describe a frontend authentication requirement and Phoenix will check it against
-        NIST 800-63B standards and tell you how to configure it in Auth0.
+        Do you have a question about a control, a security requirement, the status of your Auth0 tenant? Phoenix will tell you whether your requirement is possible, whether it conforms with NIST standards (and later our own internal standards). And depending on your access, he may be able to configure your tenant for you! Don&apos;t be shy!
       </p>
 
       <div
@@ -97,7 +97,7 @@ export default function CSRPage() {
               textAlign: msg.role === 'user' ? 'right' : 'left',
             }}
           >
-            <span
+            <div
               style={{
                 display: 'inline-block',
                 maxWidth: '80%',
@@ -106,12 +106,15 @@ export default function CSRPage() {
                 backgroundColor: msg.role === 'user' ? '#0d6efd' : '#ffffff',
                 color: msg.role === 'user' ? '#ffffff' : '#212529',
                 border: msg.role === 'assistant' ? '1px solid #dee2e6' : 'none',
-                whiteSpace: 'pre-wrap',
                 textAlign: 'left',
               }}
             >
-              {msg.content || (isStreaming && i === messages.length - 1 ? '▍' : '')}
-            </span>
+              {msg.role === 'user' ? (
+                msg.content
+              ) : (
+                <ReactMarkdown>{msg.content || (isStreaming && i === messages.length - 1 ? '▍' : '')}</ReactMarkdown>
+              )}
+            </div>
           </div>
         ))}
         <div ref={bottomRef} />
@@ -121,7 +124,7 @@ export default function CSRPage() {
         <input
           type="text"
           className="form-control"
-          placeholder="Describe your business requirement..."
+          placeholder="Type something. We'll try our best to guess what you mean."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isStreaming}
