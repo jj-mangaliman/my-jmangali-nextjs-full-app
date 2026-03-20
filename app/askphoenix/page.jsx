@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@auth0/nextjs-auth0';
 import Loading from '../../components/Loading';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function CSRPage() {
   const { isLoading } = useUser();
@@ -64,80 +65,106 @@ export default function CSRPage() {
   if (isLoading) return <Loading />;
 
   return (
-    <div data-testid="csr" style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
-      <h2 style={{ marginBottom: '8px' }}>Got a question for Phoenix?</h2>
-      <p className="text-muted" style={{ marginBottom: '24px' }}>
-        Do you have a question about a control, a security requirement, the status of your Auth0 tenant? Phoenix will tell you whether your requirement is possible, whether it conforms with NIST standards (and later our own internal standards). And depending on your access, he may be able to configure your tenant for you! Don&apos;t be shy!
-      </p>
+    <>
+      <style>{`
+        .phoenix-chat-wrapper {
+          width: 100%;
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 24px;
+          box-sizing: border-box;
+        }
+        .phoenix-chat-box {
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          padding: 16px;
+          min-height: 50vh;
+          max-height: 65vh;
+          overflow-y: auto;
+          margin-bottom: 16px;
+          background-color: #f8f9fa;
+        }
+        .phoenix-chat-form {
+          display: flex;
+          gap: 8px;
+        }
+        @media (max-width: 576px) {
+          .phoenix-chat-wrapper {
+            padding: 16px;
+          }
+          .phoenix-chat-form {
+            flex-direction: column;
+          }
+          .phoenix-chat-form button {
+            width: 100%;
+          }
+        }
+      `}</style>
 
-      <div
-        style={{
-          border: '1px solid #dee2e6',
-          borderRadius: '8px',
-          padding: '16px',
-          minHeight: '400px',
-          maxHeight: '500px',
-          overflowY: 'auto',
-          marginBottom: '16px',
-          backgroundColor: '#f8f9fa',
-        }}
-      >
-        {messages.length === 0 && (
-          <p className="text-muted" style={{ textAlign: 'center', marginTop: '160px' }}>
-            Ask a question to get started. <br />
-            <small>e.g. "We want users to stay logged in for 30 days without re-authenticating"</small>
-          </p>
-        )}
+      <div data-testid="csr" className="phoenix-chat-wrapper">
+        <h2 style={{ marginBottom: '8px' }}>Got a question for Phoenix?</h2>
+        <p className="text-muted" style={{ marginBottom: '24px' }}>
+          Do you have a question about a control, a security requirement, the status of your Auth0 tenant? Phoenix will tell you whether your requirement is possible, whether it conforms with NIST standards (and later our own internal standards). And depending on your access, he may be able to configure your tenant for you! Don&apos;t be shy!
+        </p>
 
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            style={{
-              marginBottom: '16px',
-              textAlign: msg.role === 'user' ? 'right' : 'left',
-            }}
-          >
+        <div className="phoenix-chat-box">
+          {messages.length === 0 && (
+            <p className="text-muted" style={{ textAlign: 'center', marginTop: '20vh' }}>
+              Ask a question to get started. <br />
+              <small>e.g. &quot;We want users to stay logged in for 30 days without re-authenticating&quot;</small>
+            </p>
+          )}
+
+          {messages.map((msg, i) => (
             <div
+              key={i}
               style={{
-                display: 'inline-block',
-                maxWidth: '80%',
-                padding: '10px 14px',
-                borderRadius: '12px',
-                backgroundColor: msg.role === 'user' ? '#0d6efd' : '#ffffff',
-                color: msg.role === 'user' ? '#ffffff' : '#212529',
-                border: msg.role === 'assistant' ? '1px solid #dee2e6' : 'none',
-                textAlign: 'left',
+                marginBottom: '16px',
+                textAlign: msg.role === 'user' ? 'right' : 'left',
               }}
             >
-              {msg.role === 'user' ? (
-                msg.content
-              ) : (
-                <ReactMarkdown>{msg.content || (isStreaming && i === messages.length - 1 ? '▍' : '')}</ReactMarkdown>
-              )}
+              <div
+                style={{
+                  display: 'inline-block',
+                  maxWidth: '80%',
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  backgroundColor: msg.role === 'user' ? '#0d6efd' : '#ffffff',
+                  color: msg.role === 'user' ? '#ffffff' : '#212529',
+                  border: msg.role === 'assistant' ? '1px solid #dee2e6' : 'none',
+                  textAlign: 'left',
+                }}
+              >
+                {msg.role === 'user' ? (
+                  msg.content
+                ) : (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content || (isStreaming && i === messages.length - 1 ? '▍' : '')}</ReactMarkdown>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
 
-      <form onSubmit={sendMessage} style={{ display: 'flex', gap: '8px' }}>
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Type something. We'll try our best to guess what you mean."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          disabled={isStreaming}
-        />
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={isStreaming || !input.trim()}
-          style={{ whiteSpace: 'nowrap' }}
-        >
-          {isStreaming ? 'Thinking...' : 'Ask Phoenix'}
-        </button>
-      </form>
-    </div>
+        <form onSubmit={sendMessage} className="phoenix-chat-form">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Type something. We'll try our best to guess what you mean."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={isStreaming}
+          />
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={isStreaming || !input.trim()}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            {isStreaming ? 'Thinking...' : 'Ask Phoenix'}
+          </button>
+        </form>
+      </div>
+    </>
   );
 }

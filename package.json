@@ -35,7 +35,8 @@
     "react": "19.0.1",
     "react-dom": "19.0.1",
     "react-markdown": "^10.1.0",
-    "reactstrap": "^9.1.5"
+    "reactstrap": "^9.1.5",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",

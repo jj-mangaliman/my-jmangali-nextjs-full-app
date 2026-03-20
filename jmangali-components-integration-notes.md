@@ -181,6 +181,18 @@ All diagnostic code removed. Route restored to full production state:
 
 ---
 
+### 7. UI Copy + Responsiveness — `/app/askphoenix/page.jsx`
+
+**What:** Updated the page copy and made the chat UI responsive.
+
+**Copy changes:** Heading updated to "Got a question for Phoenix?", paragraph replaced with a friendlier, security-focused description, and the input placeholder updated to "Type something. We'll try our best to guess what you mean."
+
+**Responsiveness:** Swapped fixed pixel heights on the chat box for viewport-relative units (`50vh`/`65vh`), added a `<style>` block with media queries so the form stacks vertically on mobile (`≤576px`), and ensured the outer wrapper fills narrower screens with `width: 100%`.
+
+**GFM Tables:** Installed `remark-gfm` and passed it as a plugin to `<ReactMarkdown>` so tables, strikethrough, and other GitHub Flavored Markdown elements render properly instead of appearing as raw symbols.
+
+---
+
 ### 6. Markdown Rendering — `/app/askphoenix/page.jsx`
 
 **What:** Installed `react-markdown` and replaced raw text rendering of
@@ -208,6 +220,9 @@ text. Without a renderer, these appear as raw symbols — ugly and hard to read.
 | Test Phoenix end-to-end on Vercel | ✅ Working |
 | Add Anthropic API credits | ✅ Done |
 | Markdown rendering for Phoenix responses | ✅ Done |
+| GFM table rendering (`remark-gfm`) | ✅ Done |
+| Responsive chat UI (viewport-relative heights, mobile form stack) | ✅ Done |
+| Updated Ask Phoenix page copy | ✅ Done |
 | Test live data fetch (Auth0 changelog + NIST) | ⏳ Pending |
 | Create Monica, Rachel, Phoebe in Auth0 | ⏳ Pending |
 | Enable FGA on Auth0 tenant | ⏳ Pending |
