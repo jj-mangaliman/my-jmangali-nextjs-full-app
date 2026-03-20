@@ -7,6 +7,14 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Temporary debug endpoint — remove after diagnosis
+export async function GET() {
+  return new Response(JSON.stringify({
+    hasKey: !!process.env.ANTHROPIC_API_KEY,
+    keyPrefix: process.env.ANTHROPIC_API_KEY?.slice(0, 10) ?? 'missing',
+  }), { headers: { 'Content-Type': 'application/json' } });
+}
+
 const SYSTEM_PROMPT = `You are Phoenix, an expert AI advisor specializing in authentication, identity, and access management.
 
 Your job is to help developers and product teams evaluate their frontend business requirements against two lenses:
