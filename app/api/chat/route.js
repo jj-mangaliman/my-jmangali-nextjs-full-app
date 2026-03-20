@@ -53,7 +53,7 @@ const MAX_CONTINUATIONS = 5;
 
 export async function POST(request) {
   try {
-    const session = await auth0.getSession(request);
+    const session = await auth0.getSession();
 
     if (!session) {
       return new Response(JSON.stringify({ error: 'Not authenticated' }), {
