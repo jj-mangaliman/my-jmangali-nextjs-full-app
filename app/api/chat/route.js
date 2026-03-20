@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+
 import { auth0 } from '../../../lib/auth0';
 import Anthropic from '@anthropic-ai/sdk';
 
