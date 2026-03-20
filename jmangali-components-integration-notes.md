@@ -211,6 +211,40 @@ text. Without a renderer, these appear as raw symbols — ugly and hard to read.
 
 ---
 
+---
+
+## How to Write a Good Commit Message
+
+Good commits answer three questions — in this order:
+
+**WHY** (the problem) → **WHAT** (what you changed) → **HOW** (the detail)
+
+The *why* is the most important and the most skipped. The diff already shows what changed — only the commit message can explain why you changed it.
+
+| Part | Question it answers | Example |
+|---|---|---|
+| **WHY** | What was broken or needed? | Auth0 atom.xml feed was blocked by their servers |
+| **WHAT** | What did you change? | Switched changelog URL to /changelog page |
+| **HOW** | Where/how specifically? | Updated system prompt in route.js |
+
+Rolled into one line:
+```
+fix Auth0 changelog URL — atom.xml blocked, switched to /changelog
+```
+
+For bigger changes, use the headline + body format:
+```
+fix Auth0 changelog URL — atom.xml blocked, switched to /changelog
+
+- atom.xml was returning 403 for programmatic requests
+- /changelog page is publicly accessible and returns full content
+- Updated system prompt in app/api/chat/route.js
+```
+
+**The rule:** the code shows *what* changed. The commit message must explain *why you changed it*. Future you at 11pm will thank present you.
+
+---
+
 ## Still To Do
 
 | Task | Status |
