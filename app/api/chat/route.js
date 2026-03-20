@@ -41,15 +41,18 @@ Be direct and practical. The user is a developer or product manager — they und
 
 export async function POST(request) {
   try {
+    console.log('[chat] step 1: checking session');
     const session = await auth0.getSession(request);
 
     if (!session) {
+      console.log('[chat] step 1 failed: no session');
       return new Response(JSON.stringify({ error: 'Not authenticated' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
+    console.log('[chat] step 2: parsing messages');
     const { messages } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -59,6 +62,7 @@ export async function POST(request) {
       });
     }
 
+    console.log('[chat] step 3: starting anthropic stream');
     const encoder = new TextEncoder();
 
     const readableStream = new ReadableStream({
@@ -76,7 +80,9 @@ export async function POST(request) {
           });
 
           await stream.finalMessage();
+          console.log('[chat] step 4: stream complete');
         } catch (err) {
+          console.error('[chat] stream error:', err.message);
           controller.error(err);
         } finally {
           controller.close();
@@ -92,6 +98,7 @@ export async function POST(request) {
       },
     });
   } catch (error) {
+    console.error('[chat] top-level error:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: error.status || 500,
       headers: { 'Content-Type': 'application/json' },
