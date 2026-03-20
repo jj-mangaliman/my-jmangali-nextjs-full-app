@@ -82,6 +82,21 @@ to:phoebe-viewer+jm
 
 ---
 
+## Test Cases for Phoenix — Questions to Ask
+
+These questions are designed to verify Phoenix is reading live NIST standards and not just answering from training data. Each one is meant to cross multiple standards so the response should cite specific control IDs.
+
+| # | Question | Standards It Should Hit |
+|---|----------|------------------------|
+| 1 | "Do we need to enforce MFA for all users in our Auth0 tenant, and is there a compliance reason for it?" | 800-63B (AALs), 800-53 IA family, CSF Protect |
+| 2 | "We want to let users stay logged in for 90 days without re-authenticating — is that allowed?" | 800-63B (session/reauthentication), 800-53 AC family |
+| 3 | "Our dev team wants to skip MFA in the staging environment — is that a security risk and what does NIST say?" | 800-63B (AAL requirements), 800-218 (SSDF), CSF Protect |
+| 4 | "What controls do we need in Auth0 to meet a MODERATE baseline?" | 800-53 MODERATE catalog, CSF — should cite specific control IDs like IA-2, AC-17 |
+
+**Question 4 is the best smoke test.** It's the most explicit multi-standard ask and will immediately reveal whether Phoenix is reading the live 800-53 MODERATE catalog or guessing from training data.
+
+---
+
 ## Setup Checklist
 
 | Task | Status |
