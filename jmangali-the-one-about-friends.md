@@ -23,11 +23,12 @@ Actually a richer demo — more granular, more realistic.
 
 ## The Cast & Their Access
 
-| Character | Email | Auth0 Role | Can Do |
+| Character | Email | FGA Role | Can Do |
 |-----------|-------|-----------|--------|
-| Monica | `monica-admin+jm@gmail.com` | Admin | Everything — writes policies, deletes users, reads logs |
-| Rachel | `rachel-editor+jm@gmail.com` | Editor | Read + write policies, NO destructive actions |
-| Phoebe | `phoebe-viewer+jm@gmail.com` | Viewer | Read only |
+| Jennifer (you) | `jennifer.mangaliman@torontomu.ca` | Godmode | Everything, no restrictions |
+| Monica | `monica-admin+jm@gmail.com` | Admin | Most things — blocked from users, Universal Login, encryption keys |
+| Rachel | `rachel-editor+jm@gmail.com` | Editor | Universal Login R/W only |
+| Phoebe | `phoebe-viewer+jm@gmail.com` | Viewer | Logs read only |
 
 ---
 
@@ -101,11 +102,11 @@ These questions are designed to verify Phoenix is reading live NIST standards an
 
 | Task | Status |
 |------|--------|
-| Create Monica in Auth0 dashboard | ⏳ Pending |
-| Create Rachel in Auth0 dashboard | ⏳ Pending |
-| Create Phoebe in Auth0 dashboard | ⏳ Pending |
-| Verify emails via Gmail | ⏳ Pending |
-| Enable FGA on Auth0 tenant | ⏳ Pending |
+| Create Monica in Auth0 dashboard | ✅ Done |
+| Create Rachel in Auth0 dashboard | ✅ Done  |
+| Create Phoebe in Auth0 dashboard | ✅ Done  |
+| Verify emails via Gmail | ✅ Done |
+| Enable FGA on Auth0 tenant | ✅ Done |
 | Define FGA authorization model | ⏳ Pending |
 | Create FGA tuples for each user | ⏳ Pending |
 | Test Phoenix respects FGA decisions | ⏳ Pending |
