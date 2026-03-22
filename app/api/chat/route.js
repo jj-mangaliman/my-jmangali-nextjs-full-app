@@ -2,10 +2,15 @@ export const maxDuration = 60;
 
 import { auth0 } from '../../../lib/auth0';
 import Anthropic from '@anthropic-ai/sdk';
+import { mcpTools } from '@anthropic-ai/sdk/helpers/beta/mcp';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+const MCP_SERVER_URL = process.env.MCP_SERVER_URL ?? 'http://localhost:3001/mcp';
 
 const SYSTEM_PROMPT = `You are Phoenix, an expert AI advisor specializing in authentication, identity, and access management.
 
@@ -14,6 +19,19 @@ Your job is to help developers and product teams evaluate their frontend busines
 1. **NIST Compliance** — Specifically NIST SP 800-63B (Digital Identity Guidelines). Flag any conflicts or concerns with the user's requirement. Reference specific NIST sections where relevant.
 
 2. **Auth0 Availability & Configuration** — Determine whether Auth0 supports the requirement natively. If it does, explain exactly how to configure it (dashboard steps, SDK settings, or rule/action code if needed).
+
+## Auth0 Tenant Management Tools
+
+You also have direct access to the user's Auth0 tenant via management tools. Use these when the user asks about their actual tenant state — not general Auth0 knowledge.
+
+Available management tools (subject to the user's role permissions — you will only see tools your current user is allowed to call):
+
+- **read_logs** — Fetch recent Auth0 tenant logs. Use when the user asks about recent activity, errors, or login events.
+- **read_users** — List users in the tenant. Use when the user asks about their user base.
+- **read_applications** — List registered Auth0 applications. Use when the user asks what apps are configured.
+- **write_branding** — Update tenant logo, primary colour, or page background colour. Use when the user asks to change how the login page looks.
+
+If a tool call is refused (not in your available tools), tell the user clearly: "Your role does not have permission to perform that action."
 
 ## Live Data Tools
 
@@ -47,11 +65,22 @@ Provide step-by-step configuration guidance. Include dashboard navigation paths,
 ## Tone
 Be direct and practical. The user is a developer or product manager — they understand technical language but may not know NIST or Auth0 deeply. Avoid unnecessary jargon but don't oversimplify.`;
 
-const TOOLS = [
-  { type: 'web_fetch_20260209', name: 'web_fetch' },
-];
-
 const MAX_CONTINUATIONS = 5;
+
+async function connectMcpClient(accessToken) {
+  const mcpClient = new Client({ name: 'phoenix', version: '1.0.0' });
+  try {
+    const transport = new StreamableHTTPClientTransport(
+      new URL(MCP_SERVER_URL),
+      { requestInit: { headers: { Authorization: `Bearer ${accessToken}` } } },
+    );
+    await mcpClient.connect(transport);
+    return mcpClient;
+  } catch (err) {
+    console.warn('[chat] MCP server unavailable — management tools disabled:', err.message);
+    return null;
+  }
+}
 
 export async function POST(request) {
   try {
@@ -73,6 +102,30 @@ export async function POST(request) {
       });
     }
 
+    // Get the user's Auth0 access token to pass to the MCP server.
+    // The MCP server validates this token and uses it to check FGA permissions.
+    const accessToken = session.tokenSet?.accessToken;
+
+    // Connect to MCP server (gracefully degrades if server is down)
+    const mcpClient = accessToken ? await connectMcpClient(accessToken) : null;
+
+    // Get the tools this user is permitted to call (FGA-filtered by the MCP server)
+    let managementTools = [];
+    if (mcpClient) {
+      try {
+        const { tools } = await mcpClient.listTools();
+        managementTools = mcpTools(tools, mcpClient);
+        console.log(`[chat] MCP tools available: ${tools.map(t => t.name).join(', ') || 'none'}`);
+      } catch (err) {
+        console.warn('[chat] Failed to list MCP tools:', err.message);
+      }
+    }
+
+    const allTools = [
+      { type: 'web_fetch_20260209', name: 'web_fetch' },
+      ...managementTools,
+    ];
+
     const encoder = new TextEncoder();
 
     const readableStream = new ReadableStream({
@@ -82,30 +135,30 @@ export async function POST(request) {
           let continuations = 0;
 
           while (continuations < MAX_CONTINUATIONS) {
-            const stream = client.messages.stream({
+            // toolRunner handles the tool_use loop automatically for MCP tools.
+            // web_fetch is server-side and handled transparently by the Anthropic API.
+            const runner = client.beta.messages.toolRunner({
               model: 'claude-opus-4-6',
               max_tokens: 8096,
               system: SYSTEM_PROMPT,
-              tools: TOOLS,
+              tools: allTools,
               messages: currentMessages,
             });
 
-            // Stream text deltas to the browser as they arrive
-            stream.on('text', (text) => {
+            runner.on('text', (text) => {
               controller.enqueue(encoder.encode(text));
             });
 
-            const message = await stream.finalMessage();
+            const message = await runner.finalMessage();
 
             console.log(`[chat] stop_reason: ${message.stop_reason}`);
-            console.log(`[chat] content blocks: ${JSON.stringify(message.content.map(b => b.type))}`);
 
             // Natural end — Phoenix is done
             if (message.stop_reason === 'end_turn') break;
 
-            // Server-side tool hit iteration limit — append and continue
+            // Server-side tool (web_fetch) hit iteration limit — append and continue
             if (message.stop_reason === 'pause_turn') {
-              console.log(`[chat] pause_turn hit — continuation ${continuations + 1}`);
+              console.log(`[chat] pause_turn — continuation ${continuations + 1}`);
               currentMessages = [
                 ...currentMessages,
                 { role: 'assistant', content: message.content },
@@ -114,7 +167,6 @@ export async function POST(request) {
               continue;
             }
 
-            // Any other stop reason — exit
             console.log(`[chat] unexpected stop_reason — exiting loop`);
             break;
           }
@@ -122,6 +174,9 @@ export async function POST(request) {
           controller.error(err);
         } finally {
           controller.close();
+          if (mcpClient) {
+            try { await mcpClient.close(); } catch {}
+          }
         }
       },
     });
