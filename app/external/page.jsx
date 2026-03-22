@@ -1,69 +1,69 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Button } from 'reactstrap';
-
+import { useState, useEffect } from 'react';
 import Loading from '../../components/Loading';
 import ErrorMessage from '../../components/ErrorMessage';
-import Highlight from '../../components/Highlight';
 
-export default function External() {
-  const [state, setState] = useState({ isLoading: false, response: undefined, error: undefined });
+export default function Permissions() {
+  const [state, setState] = useState({ isLoading: true, data: null, error: null });
 
-  const callApi = async () => {
-    setState(previous => ({ ...previous, isLoading: true }));
+  useEffect(() => {
+    fetch('/api/shows')
+      .then(res => res.json())
+      .then(data => setState({ isLoading: false, data, error: null }))
+      .catch(error => setState({ isLoading: false, data: null, error }));
+  }, []);
 
-    try {
-      const response = await fetch('/api/shows');
-      const data = await response.json();
-
-      setState(previous => ({ ...previous, response: data, error: undefined }));
-    } catch (error) {
-      setState(previous => ({ ...previous, response: undefined, error }));
-    } finally {
-      setState(previous => ({ ...previous, isLoading: false }));
-    }
-  };
-
-  const handle = (event, fn) => {
-    event.preventDefault();
-    fn();
-  };
-
-  const { isLoading, response, error } = state;
+  const { isLoading, data, error } = state;
 
   return (
-    <>
-      <div className="mb-5" data-testid="external">
-        <h1 data-testid="external-title">External API</h1>
-        <div data-testid="external-text">
-          <p className="lead">Ping an external API by clicking the button below</p>
-          <p>
-            This will call a local API on port 3001 that would have been started if you run <code>npm run dev</code>.
-          </p>
-          <p>
-            An access token is sent as part of the request's <code>Authorization</code> header and the API will validate
-            it using the API's audience value. The audience is the identifier of the API that you want to call (see{' '}
-            <a href="https://auth0.com/docs/get-started/dashboard/tenant-settings#api-authorization-settings">
-              API Authorization Settings
-            </a>{' '}
-            for more info).
-          </p>
-        </div>
-        <Button color="primary" className="mt-5" onClick={e => handle(e, callApi)} data-testid="external-action">
-          Ping API
-        </Button>
+    <div data-testid="permissions">
+      <div className="mb-5">
+        <h1 data-testid="permissions-title">My Permissions</h1>
+        <p className="lead">
+          What your role allows you to do in this tenant — enforced by Auth0 FGA at the MCP server layer.
+        </p>
       </div>
-      <div className="result-block-container">
-        {isLoading && <Loading />}
-        {(error || response) && (
-          <div className="result-block" data-testid="external-result">
-            <h6 className="muted">Result</h6>
-            {error && <ErrorMessage>{error.message}</ErrorMessage>}
-            {response && <Highlight>{JSON.stringify(response, null, 2)}</Highlight>}
-          </div>
-        )}
-      </div>
-    </>
+
+      {isLoading && <Loading />}
+
+      {error && <ErrorMessage>{error.message}</ErrorMessage>}
+
+      {data?.error && <ErrorMessage>{data.error}</ErrorMessage>}
+
+      {data && !data.error && (
+        <>
+          <p className="text-muted mb-4">
+            Logged in as <strong>{data.user}</strong>
+          </p>
+
+          <table className="table" data-testid="permissions-table">
+            <thead>
+              <tr>
+                <th>Tool</th>
+                <th>What it does</th>
+                <th>Who can use it</th>
+                <th>You</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.permissions.map(tool => (
+                <tr key={tool.name}>
+                  <td><code>{tool.name}</code></td>
+                  <td>{tool.description}</td>
+                  <td><small className="text-muted">{tool.roles}</small></td>
+                  <td>
+                    {tool.allowed
+                      ? <span style={{ color: '#28a745', fontWeight: 600 }}>✓ Allowed</span>
+                      : <span style={{ color: '#dc3545' }}>✗ Denied</span>
+                    }
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
   );
 }

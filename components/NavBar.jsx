@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Collapse,
   Container,
@@ -72,7 +72,7 @@ const NavBar = () => {
                   </NavItem>
                   <NavItem>
                     <PageLink href="/external" className="nav-link" testId="navbar-external">
-                      External API
+                      My Permissions
                     </PageLink>
                   </NavItem>
                 </>
