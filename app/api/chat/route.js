@@ -2,9 +2,6 @@ export const maxDuration = 60;
 
 import { auth0 } from '../../../lib/auth0';
 import Anthropic from '@anthropic-ai/sdk';
-import { mcpTools } from '@anthropic-ai/sdk/helpers/beta/mcp';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -67,21 +64,6 @@ Be direct and practical. The user is a developer or product manager — they und
 
 const MAX_CONTINUATIONS = 5;
 
-async function connectMcpClient(accessToken) {
-  const mcpClient = new Client({ name: 'phoenix', version: '1.0.0' });
-  try {
-    const transport = new StreamableHTTPClientTransport(
-      new URL(MCP_SERVER_URL),
-      { requestInit: { headers: { Authorization: `Bearer ${accessToken}` } } },
-    );
-    await mcpClient.connect(transport);
-    return mcpClient;
-  } catch (err) {
-    console.warn('[chat] MCP server unavailable — management tools disabled:', err.message);
-    return null;
-  }
-}
-
 export async function POST(request) {
   try {
     const session = await auth0.getSession();
@@ -102,29 +84,17 @@ export async function POST(request) {
       });
     }
 
-    // Get the user's Auth0 access token to pass to the MCP server.
-    // The MCP server validates this token and uses it to check FGA permissions.
+    // The user's Auth0 access token is passed to the MCP server as the Bearer token.
+    // Anthropic's API connects to the MCP server directly and handles tool execution.
+    // FGA filters the available tools server-side based on this token.
     const accessToken = session.tokenSet?.accessToken;
 
-    // Connect to MCP server (gracefully degrades if server is down)
-    const mcpClient = accessToken ? await connectMcpClient(accessToken) : null;
-
-    // Get the tools this user is permitted to call (FGA-filtered by the MCP server)
-    let managementTools = [];
-    if (mcpClient) {
-      try {
-        const { tools } = await mcpClient.listTools();
-        managementTools = mcpTools(tools, mcpClient);
-        console.log(`[chat] MCP tools available: ${tools.map(t => t.name).join(', ') || 'none'}`);
-      } catch (err) {
-        console.warn('[chat] Failed to list MCP tools:', err.message);
-      }
-    }
-
-    const allTools = [
-      { type: 'web_fetch_20260209', name: 'web_fetch' },
-      ...managementTools,
-    ];
+    const mcpServers = accessToken ? [{
+      type: 'url',
+      url: MCP_SERVER_URL,
+      name: 'auth0-management',
+      authorization_token: accessToken,
+    }] : [];
 
     const encoder = new TextEncoder();
 
@@ -135,28 +105,30 @@ export async function POST(request) {
           let continuations = 0;
 
           while (continuations < MAX_CONTINUATIONS) {
-            // toolRunner handles the tool_use loop automatically for MCP tools.
-            // web_fetch is server-side and handled transparently by the Anthropic API.
-            const runner = client.beta.messages.toolRunner({
+            // Anthropic's API connects to the MCP server directly.
+            // Tool execution is handled server-side — no client-side tool loop needed.
+            // web_fetch is also server-side. Both are transparent to this route.
+            const stream = client.beta.messages.stream({
               model: 'claude-opus-4-6',
               max_tokens: 8096,
               system: SYSTEM_PROMPT,
-              tools: allTools,
+              tools: [{ type: 'web_fetch_20260209', name: 'web_fetch' }],
+              ...(mcpServers.length > 0 && { mcp_servers: mcpServers }),
               messages: currentMessages,
+              betas: ['mcp-client-2025-04-04'],
             });
 
-            runner.on('text', (text) => {
+            stream.on('text', (text) => {
               controller.enqueue(encoder.encode(text));
             });
 
-            const message = await runner.finalMessage();
+            const message = await stream.finalMessage();
 
             console.log(`[chat] stop_reason: ${message.stop_reason}`);
 
-            // Natural end — Phoenix is done
             if (message.stop_reason === 'end_turn') break;
 
-            // Server-side tool (web_fetch) hit iteration limit — append and continue
+            // Server-side tool hit iteration limit — append and continue
             if (message.stop_reason === 'pause_turn') {
               console.log(`[chat] pause_turn — continuation ${continuations + 1}`);
               currentMessages = [
@@ -174,9 +146,6 @@ export async function POST(request) {
           controller.error(err);
         } finally {
           controller.close();
-          if (mcpClient) {
-            try { await mcpClient.close(); } catch {}
-          }
         }
       },
     });
