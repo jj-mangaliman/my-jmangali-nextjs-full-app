@@ -249,7 +249,7 @@ fix Auth0 changelog URL — atom.xml blocked, switched to /changelog
 
 | Task | Status |
 |------|--------|
-| Push all changes to GitHub | ⏳ Pending |
+| Push all changes to GitHub | ✅ Done |
 | Add `ANTHROPIC_API_KEY` to Vercel env vars | ✅ Done |
 | Test Phoenix end-to-end on Vercel | ✅ Working |
 | Add Anthropic API credits | ✅ Done |
@@ -257,6 +257,15 @@ fix Auth0 changelog URL — atom.xml blocked, switched to /changelog
 | GFM table rendering (`remark-gfm`) | ✅ Done |
 | Responsive chat UI (viewport-relative heights, mobile form stack) | ✅ Done |
 | Updated Ask Phoenix page copy | ✅ Done |
+| localStorage conversation persistence | ✅ Done |
+| Download session as markdown | ✅ Done |
 | Test live data fetch (Auth0 changelog + NIST) | ⏳ Pending |
-| Create Monica, Rachel, Phoebe in Auth0 | ⏳ Pending |
-| Enable FGA on Auth0 tenant | ⏳ Pending |
+| Create Monica, Rachel, Phoebe in Auth0 | ✅ Done |
+| Enable FGA on Auth0 tenant | ✅ Done |
+| Define FGA authorization model | ✅ Done |
+| Create FGA tuples for each user | ✅ Done |
+| Create FastMCP FGA repo | ✅ Done |
+| Fill in FastMCP FGA .env credentials | ✅ Done |
+| Wire FGA into Next.js chat route | ⏳ Pending |
+| Replace document tools with Auth0 Management API tools | ⏳ Pending |
+| Test Phoenix respects FGA decisions end-to-end | ⏳ Pending |

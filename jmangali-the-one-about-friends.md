@@ -107,6 +107,6 @@ These questions are designed to verify Phoenix is reading live NIST standards an
 | Create Phoebe in Auth0 dashboard | ✅ Done  |
 | Verify emails via Gmail | ✅ Done |
 | Enable FGA on Auth0 tenant | ✅ Done |
-| Define FGA authorization model | ⏳ Pending |
-| Create FGA tuples for each user | ⏳ Pending |
+| Define FGA authorization model | ✅ Done |
+| Create FGA tuples for each user | ✅ Done |
 | Test Phoenix respects FGA decisions | ⏳ Pending |
