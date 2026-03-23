@@ -113,7 +113,30 @@ The `https://auth0.com/changelog` page is JavaScript-rendered — `web_fetch` ca
 
 ### Confirmed Working ✅
 
-- Jennifer (godmode) asked "who are the users on my tenant?" → Phoenix returned a formatted table of all 7 users with provider, login count, and last login date — pulled live from the Auth0 Management API.
+- **Jennifer (godmode)** — `read_users` returned live table of all 7 tenant users with provider, login count, and last login date.
+- **Phoebe (viewer)** — My Permissions shows `read_logs` Allowed only. Phoenix asked a NIST question first (no tools surfaced), then a logs question (called `read_logs` correctly). Staying in her lane.
+- **Rachel (editor)** — My Permissions shows `write_branding` Allowed only. FGA enforcement correct. `write_branding` call blocked by missing `update:branding` M2M scope — fix in progress (tick scope in Auth0 dashboard, no redeploy needed).
+- **Monica (admin)** — ⏳ Pending verification.
+
+### Bugs Found & Fixed During Task 3
+
+**FGA batchCheck ordering bug** — `batchCheck` doesn't guarantee result order. Index-based matching caused wrong tools to show as Allowed for Phoebe. Fixed by switching to parallel individual `check` calls with `Promise.all` — each result directly tied to its tool name.
+
+**FGA tuple role mismatch** — Both Phoebe and Rachel were written as `editor` in the FGA store. Viewer tuple was never written for Phoebe. Fixed manually in the FGA Dashboard → Tuple Management. `tuples.yaml` updated to match.
+
+**Phoenix tool hallucination** — Phoenix invented tool names (`bash_code_execution`, `read_users`, `write_branding`) mid-conversation instead of checking its actual tool list. Fixed by hardening the system prompt: named the `auth0-management_` prefix, explicitly listed tools that don't exist, instructed Phoenix to lock in its tool list at conversation start.
+
+**Missing `update:branding` M2M scope** — Rachel's `write_branding` call returned 403. The M2M app was granted `read:logs`, `read:users`, `read:clients` but `update:branding` was missed. Fix: tick it in Auth0 Dashboard → no redeploy needed.
+
+**Important principle:** FGA controls what users can trigger. M2M scopes control what the server can do to Auth0. They are separate enforcement layers — don't grant all M2M scopes just because a user has a powerful role.
+
+### UI Improvements (March 2026)
+
+- Ask Phoenix chat is now full-width and responsive — removed 800px cap, added padding per Bootstrap breakpoints (mobile 12px → desktop 32px)
+- User bubbles changed from Bootstrap blue to brand yellow (`#ffb700`)
+- Assistant messages uncapped (tables need full width)
+- "Fetching from your tenant..." hint shown while streaming tool calls
+- First message: Phoenix greets user by name (from Auth0 session), only surfaces tenant tools if the question is tenant-related
 
 ---
 
