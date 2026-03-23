@@ -19,16 +19,19 @@ Your job is to help developers and product teams evaluate their frontend busines
 
 ## Auth0 Tenant Management Tools
 
-You may have direct access to the user's Auth0 tenant via management tools.
+You may have Auth0 management tools available. These come exclusively from the MCP server named auth0-management and will appear in your tool list prefixed as "auth0-management_". Examples: auth0-management_read_logs, auth0-management_read_users.
 
-**CRITICAL RULES — follow these exactly:**
-1. Before claiming any tool exists or is available, check your actual tool list. Do not guess, infer, or assume any tool exists based on training knowledge.
-2. Only call tools that are explicitly present in your tool list right now. Never attempt to call a tool that is not there.
-3. Do not describe or promise capabilities from tools you have not confirmed in your tool list.
-4. If you are uncertain what tools you have, say so — do not speculate.
-5. If the user asks for something and you do not have a tool for it, say clearly: "I don't have access to that for your current role." Do not flip-flop between responses about what tools you have.
+**You do NOT have — and must NEVER claim to have — any of the following:**
+- bash_code_execution, text_editor_code_execution, code_execution, or any code/shell execution tools
+- Any auth0-management tool not currently in your tool list
 
-If you have no management tools at all, tell the user: "Your role does not have permission to access tenant management tools."
+**CRITICAL RULES:**
+1. At the start of every conversation, note exactly which auth0-management_* tools appear in your tool list. That list is fixed for the session — do not revise it mid-conversation.
+2. Only call a tool that is in your tool list. Never call a tool you are not certain exists.
+3. Once you have established what tools you have, do not contradict yourself in later messages.
+4. If the user asks for something you have no tool for, say once: "I don't have access to that for your current role." Do not keep re-checking or changing your answer.
+
+If you have no auth0-management_* tools at all, tell the user: "Your role does not have permission to access tenant management tools."
 
 ## Live Data Tools
 
@@ -88,6 +91,7 @@ export async function POST(request) {
     // Anthropic's API connects to the MCP server directly and handles tool execution.
     // FGA filters the available tools server-side based on this token.
     const accessToken = session.tokenSet?.accessToken;
+    const userName = session.user?.given_name || session.user?.name || 'there';
 
     const mcpServers = accessToken ? [{
       type: 'url',
@@ -95,6 +99,13 @@ export async function POST(request) {
       name: 'auth0-management',
       authorization_token: accessToken,
     }] : [];
+
+    // On the first message of a conversation, instruct Phoenix to greet the user
+    // by name and declare only the tools it actually has before answering.
+    const isFirstMessage = messages.length === 1;
+    const openingInstruction = isFirstMessage
+      ? `\n\n## Opening Greeting (first message only)\nThe user's name is ${userName}. Before answering their question, start your response with a short greeting: "Hi ${userName}! Here's what I can do for you:" followed by a bullet list of ONLY the auth0-management_* tools currently in your tool list (use friendly descriptions, not raw tool names). If you have no auth0-management tools, say so clearly. Then answer their question.`
+      : '';
 
     const encoder = new TextEncoder();
 
@@ -111,7 +122,7 @@ export async function POST(request) {
             const stream = client.beta.messages.stream({
               model: 'claude-opus-4-6',
               max_tokens: 8096,
-              system: SYSTEM_PROMPT,
+              system: SYSTEM_PROMPT + openingInstruction,
               tools: [{ type: 'web_fetch_20260209', name: 'web_fetch' }],
               ...(mcpServers.length > 0 && { mcp_servers: mcpServers }),
               messages: currentMessages,
