@@ -106,8 +106,6 @@ export default function CSRPage() {
           flex-direction: column;
           height: calc(100dvh - 64px);
           width: 100%;
-          max-width: 800px;
-          margin: 0 auto;
           padding: 24px;
           box-sizing: border-box;
         }
@@ -127,7 +125,7 @@ export default function CSRPage() {
         }
         @media (max-width: 576px) {
           .phoenix-page {
-            padding: 16px;
+            padding: 12px;
           }
           .phoenix-chat-form {
             flex-direction: column;
@@ -135,6 +133,15 @@ export default function CSRPage() {
           .phoenix-chat-form button {
             width: 100%;
           }
+        }
+        @media (min-width: 577px) and (max-width: 768px) {
+          .phoenix-page { padding: 16px; }
+        }
+        @media (min-width: 769px) and (max-width: 992px) {
+          .phoenix-page { padding: 20px; }
+        }
+        @media (min-width: 993px) {
+          .phoenix-page { padding: 24px 32px; }
         }
       `}</style>
 
