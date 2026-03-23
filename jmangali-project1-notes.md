@@ -59,7 +59,65 @@
 | **package.json** | Project metadata | Project dependencies and metadata. Lists all npm packages you use | react, next, typescript versions |
 | **README.md** | Documentation | Documentation for other developers. How to run the project, what it does | Project overview and setup instructions |
 
-## 4. 🐛Common Errors & Fixes 
+## 4. 🏗️ What We Built — MCP + FGA Integration (March 2026)
+
+### The Big Picture
+
+We extended the Next.js app with a full AI-driven Auth0 tenant management system. Phoenix (the chatbot) can now call real Auth0 Management API actions — but only based on what your role allows, enforced by Auth0 FGA (Fine-Grained Authorization).
+
+```
+You (browser)
+    ↓
+Next.js App (Vercel)
+    ↓  your Auth0 access token
+Anthropic API (Claude / Phoenix)
+    ↓  mcp_servers config — Anthropic connects directly
+FastMCP Server (Azure Container Apps)
+    ↓              ↓
+Auth0 FGA     Auth0 Management API
+(can you?)    (actually do it)
+```
+
+### Four Roles, Four Sets of Permissions
+
+| Role | User | Can do |
+|---|---|---|
+| godmode | Jennifer | Everything |
+| admin | Monica | Read logs, read apps |
+| editor | Rachel | Update branding |
+| viewer | Phoebe | Read logs only |
+
+### Pages Added / Changed
+
+| Page | What it does |
+|---|---|
+| `/askphoenix` | Chat with Phoenix. Now streams real Auth0 tenant data via MCP tools. Brand yellow user bubbles. Full-width assistant messages (better for tables). Shows "fetching from tenant..." hint during tool calls. |
+| `/external` → "My Permissions" | Shows a live allow/deny grid of MCP tools for the logged-in user — powered by FGA. Replaces the sample External API page. |
+| Home page | Logged-in state now shows only the Yellow Umbrella hero image — no copy. Logged-out state unchanged. |
+| NavBar | "External API" renamed "My Permissions". "User Profile" renamed "My Profile". |
+
+### Key Technical Decisions
+
+**Why Anthropic remote MCP (`mcp_servers`) instead of a client-side connection:**
+The Next.js route used to open an MCP connection at startup and try to reuse it when Phoenix executed a tool. Vercel serverless functions are stateless — the connection expired silently between those two moments. Switching to `mcp_servers` hands the connection to Anthropic's infrastructure, which dials the MCP server fresh on every tool call. Think: payphone (dies) vs hotel concierge (reliable).
+
+**Why the system prompt doesn't list tool names:**
+If the system prompt names tools that FGA has hidden for this user, Phoenix tries to call them anyway and crashes. By removing specific names, Phoenix discovers available tools dynamically from MCP and only calls what's actually there.
+
+**Why `rss.xml` for the Auth0 changelog:**
+The `https://auth0.com/changelog` page is JavaScript-rendered — `web_fetch` can't execute JS, so it gets an empty shell. The RSS feed at `/changelog/rss.xml` is static XML and returns real content.
+
+### Auth0 Dashboard Gotcha
+
+`Phoenix-MCP-Auth0Management-Dev` (M2M app) needs **Client Access** authorized for the Auth0 Management API with scopes: `read:logs`, `read:users`, `read:clients`, `update:branding`. User Access is irrelevant for M2M apps. If Client Access is Unauthorized, every tool call fails with "Failed to get management token: Unauthorized".
+
+### Confirmed Working ✅
+
+- Jennifer (godmode) asked "who are the users on my tenant?" → Phoenix returned a formatted table of all 7 users with provider, login count, and last login date — pulled live from the Auth0 Management API.
+
+---
+
+## 5. 🐛 Common Errors & Fixes
 (Problems you hit + how you solved them)
 
 

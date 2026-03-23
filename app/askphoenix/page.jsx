@@ -175,11 +175,11 @@ export default function CSRPage() {
               <div
                 style={{
                   display: 'inline-block',
-                  maxWidth: '80%',
+                  maxWidth: msg.role === 'assistant' ? '100%' : '80%',
                   padding: '10px 14px',
                   borderRadius: '12px',
-                  backgroundColor: msg.role === 'user' ? '#0d6efd' : '#ffffff',
-                  color: msg.role === 'user' ? '#ffffff' : '#212529',
+                  backgroundColor: msg.role === 'user' ? '#ffb700' : '#ffffff',
+                  color: '#212529',
                   border: msg.role === 'assistant' ? '1px solid #dee2e6' : 'none',
                   textAlign: 'left',
                 }}
@@ -212,6 +212,11 @@ export default function CSRPage() {
           >
             {isStreaming ? 'Thinking...' : 'Ask Phoenix'}
           </button>
+          {isStreaming && (
+            <p className="text-muted" style={{ fontSize: '0.75rem', margin: '6px 0 0', textAlign: 'center' }}>
+              This may take a moment if Phoenix is fetching live data from your tenant...
+            </p>
+          )}
         </form>
       </div>
     </>
