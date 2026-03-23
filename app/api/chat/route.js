@@ -100,11 +100,12 @@ export async function POST(request) {
       authorization_token: accessToken,
     }] : [];
 
-    // On the first message of a conversation, instruct Phoenix to greet the user
-    // by name and declare only the tools it actually has before answering.
+    // On the first message of a conversation, greet the user by name.
+    // Do NOT declare tenant tools upfront — only surface them if the question
+    // is about the tenant. For NIST or Auth0 config questions, just answer.
     const isFirstMessage = messages.length === 1;
     const openingInstruction = isFirstMessage
-      ? `\n\n## Opening Greeting (first message only)\nThe user's name is ${userName}. Before answering their question, start your response with a short greeting: "Hi ${userName}! Here's what I can do for you:" followed by a bullet list of ONLY the auth0-management_* tools currently in your tool list (use friendly descriptions, not raw tool names). If you have no auth0-management tools, say so clearly. Then answer their question.`
+      ? `\n\n## Opening Greeting (first message only)\nThe user's name is ${userName}. Start your response with a brief, warm greeting: "Hi ${userName}!" — then answer their question naturally. Only mention tenant management tools if their question is specifically about their Auth0 tenant state (e.g. asking about their users, logs, applications, or branding). Do not mention tools for NIST questions, Auth0 configuration questions, or general advisory questions.`
       : '';
 
     const encoder = new TextEncoder();
