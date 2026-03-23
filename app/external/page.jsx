@@ -21,7 +21,9 @@ export default function Permissions() {
       <div className="mb-5">
         <h1 data-testid="permissions-title">My Permissions</h1>
         <p className="lead">
-          What your role allows you to do in this tenant — enforced by Auth0 FGA at the MCP server layer.
+          What your role allows you to do in tenant <strong>{data?.tenant ?? '...'}</strong> — enforced by{' '}
+          <a href="https://play.fga.dev/" target="_blank" rel="noreferrer">Auth0 FGA</a> at the{' '}
+          <a href="https://docs.fga.dev/authorization-concepts#what-is-relationship-based-access-control" target="_blank" rel="noreferrer">MCP server layer</a>.
         </p>
       </div>
 

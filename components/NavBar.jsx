@@ -113,7 +113,7 @@ const NavBar = () => {
                       {user.name}
                     </DropdownItem>
                     <DropdownItem className="dropdown-profile" tag="span">
-                      <PageLink href="/profile" icon="user" testId="navbar-profile-desktop">
+                      <PageLink href="/ssr" icon="user" testId="navbar-profile-desktop">
                         Profile
                       </PageLink>
                     </DropdownItem>

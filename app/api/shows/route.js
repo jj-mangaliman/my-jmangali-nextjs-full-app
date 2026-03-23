@@ -48,6 +48,7 @@ export const GET = async function permissions() {
 
     return NextResponse.json({
       user: session.user.name ?? session.user.email,
+      tenant: process.env.AUTH0_DOMAIN?.split('.')[0] ?? 'unknown',
       permissions,
     });
   } catch (error) {
