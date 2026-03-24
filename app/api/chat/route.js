@@ -30,6 +30,7 @@ You may have Auth0 management tools available. These come exclusively from the M
 2. Only call a tool that is in your tool list. Never call a tool you are not certain exists.
 3. Once you have established what tools you have, do not contradict yourself in later messages.
 4. If the user asks for something you have no tool for, say once: "I don't have access to that for your current role." Do not keep re-checking or changing your answer.
+5. When describing what you can do with tenant tools, ONLY list the specific tools in your tool list. Never infer or fabricate additional capabilities beyond what is explicitly in your tool list. Do not describe what the Auth0 Management API can do in general — only describe what YOUR tools can do.
 
 If you have no auth0-management_* tools at all, tell the user: "Your role does not have permission to access tenant management tools."
 
@@ -91,10 +92,15 @@ export async function POST(request) {
     // Anthropic's API connects to the MCP server directly and handles tool execution.
     // FGA filters the available tools server-side based on this token.
     const accessToken = session.tokenSet?.accessToken;
-    const userName = session.user?.given_name || session.user?.name || 'there';
+    const rawName = session.user?.given_name || session.user?.name || '';
+    const userName = rawName.includes('@') ? rawName.split('@')[0].split('.').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ') : rawName || 'there';
 
-    // Temporarily disabled to isolate Anthropic 500 — testing plain chat without MCP
-    const mcpServers = [];
+    const mcpServers = accessToken ? [{
+      type: 'url',
+      url: MCP_SERVER_URL,
+      name: 'auth0-management',
+      authorization_token: accessToken,
+    }] : [];
 
     // On the first message of a conversation, greet the user by name.
     // Do NOT declare tenant tools upfront — only surface them if the question
