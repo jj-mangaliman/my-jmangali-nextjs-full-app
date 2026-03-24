@@ -124,10 +124,9 @@ export async function POST(request) {
               model: 'claude-opus-4-6',
               max_tokens: 8096,
               system: SYSTEM_PROMPT + openingInstruction,
-              tools: [{ type: 'web_fetch_20260209', name: 'web_fetch' }],
               ...(mcpServers.length > 0 && { mcp_servers: mcpServers }),
               messages: currentMessages,
-              betas: ['mcp-client-2025-04-04', 'web-fetch-2026-02-09'],
+              betas: ['mcp-client-2025-04-04'],
             });
 
             stream.on('text', (text) => {
