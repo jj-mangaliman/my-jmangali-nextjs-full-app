@@ -154,8 +154,8 @@ export async function POST(request) {
             break;
           }
         } catch (err) {
-          controller.error(err);
-        } finally {
+          console.error('[chat] stream error:', err?.message || err);
+          controller.enqueue(encoder.encode(`\n\n**Phoenix encountered an error:** ${err?.message || 'Unknown error'}. Please try again.`));
           controller.close();
         }
       },
