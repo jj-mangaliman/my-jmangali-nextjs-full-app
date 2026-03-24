@@ -93,12 +93,8 @@ export async function POST(request) {
     const accessToken = session.tokenSet?.accessToken;
     const userName = session.user?.given_name || session.user?.name || 'there';
 
-    const mcpServers = accessToken ? [{
-      type: 'url',
-      url: MCP_SERVER_URL,
-      name: 'auth0-management',
-      authorization_token: accessToken,
-    }] : [];
+    // Temporarily disabled to isolate Anthropic 500 — testing plain chat without MCP
+    const mcpServers = [];
 
     // On the first message of a conversation, greet the user by name.
     // Do NOT declare tenant tools upfront — only surface them if the question
