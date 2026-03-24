@@ -161,6 +161,7 @@ export async function POST(request) {
         } catch (err) {
           console.error('[chat] stream error:', err?.message || err);
           controller.enqueue(encoder.encode(`\n\n**Phoenix encountered an error:** ${err?.message || 'Unknown error'}. Please try again.`));
+        } finally {
           controller.close();
         }
       },
