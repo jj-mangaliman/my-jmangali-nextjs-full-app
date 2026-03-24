@@ -21,6 +21,8 @@ Update this file after each session.
 | `fc7bed6` | 2026-03-24 | fix: handle stream errors gracefully instead of crashing function |
 | `67e3b1c` | 2026-03-24 | fix: only send mcp-client beta flag when MCP server is present |
 | `fc8afc6` | 2026-03-24 | test: disable MCP temporarily to isolate Anthropic 500 |
+| `ea92d62` | 2026-03-24 | docs: add commands inventory |
+| `1405f52` | 2026-03-24 | fix: iterate stream events directly to close response immediately after end_turn |
 
 ### auth0-fastmcp-fga
 
@@ -32,6 +34,8 @@ Update this file after each session.
 | `e27e4ab` | 2026-03-24 | fix: upgrade fastmcp 3.32 to 3.34 to fix client capabilities handshake |
 | `8fb70ff` | 2026-03-24 | fix: switch to stateful HTTP Stream mode — Anthropic remote MCP requires session handshake |
 | `65bcdab` | 2026-03-24 | docs: add Issue 9 — FastMCP stateless mode incompatible with Anthropic remote MCP handshake |
+
+> ⚠️ **Important lesson learned 2026-03-24:** Creating a new Azure revision does NOT automatically pick up code changes. You must run `az acr build` first to bake the new code into the image, THEN create the revision. If you create a revision before rebuilding, it pulls the old `latest` tag.
 
 ---
 
@@ -72,10 +76,11 @@ az acr build --registry jmangaliacr --image auth0-fastmcp-fga:latest .
 
 **Revisions created 2026-03-24:**
 
-| Revision Name | Image | Change |
-|---|---|---|
-| `jmangali-auth0-mcp-server--fastmcpupgrade` | `auth0-fastmcp-fga:latest` | FastMCP 3.32 → 3.34 |
-| `jmangali-auth0-mcp-server--statelessfalsechange` | `auth0-fastmcp-fga:latest` | stateless: true → false |
+| Revision Name | Image rebuilt? | Change | Notes |
+|---|---|---|---|
+| `jmangali-auth0-mcp-server--fastmcpupgrade` | ✅ Yes | FastMCP 3.32 → 3.34 | Image built before revision — correct |
+| `jmangali-auth0-mcp-server--statelessfalsechange` | ❌ No | stateless: true → false | Revision created before image rebuild — old code ran |
+| _(pending)_ | ✅ Yes | stateless: false (corrected) | `az acr build` run after discovering the gap |
 
 ---
 
@@ -164,7 +169,8 @@ MM.DD.YYYY - <context> - <deployment-url>.har
 | `03.24.2026 - my-jmangali-nextjs-full-app-4g3f.vercel.app.har` | 2026-03-24 | Pre-fix baseline | `/api/chat` returning HTML 500, 26s timeout |
 | `03.24.2026 - post commit fc7bed6 - my-jmangali-nextjs-full-app-4g3f.vercel.app.har` | 2026-03-24 | After graceful error handling | Anthropic 500 now visible in chat UI |
 | `03.24.2026 - post commit 67e3b1c - my-jmangali-nextjs-full-app-4g3f.vercel.app.har` | 2026-03-24 | After beta flag fix | Anthropic still 500, `/api/shows` MCP error -32601 |
-| `03.24.2026 - post statelessfalsechange my-jmangali-nextjs-full-app-.har` | 2026-03-24 | After stateless: false | Anthropic still 500, investigating |
+| `03.24.2026 - post statelessfalsechange my-jmangali-nextjs-full-app-.har` | 2026-03-24 | After stateless: false (bad revision) | Anthropic still 500 — image hadn't been rebuilt yet |
+| `03.24.2026 - post commitea92d62 my-jmangali-nextjs-full-app-.har` | 2026-03-24 | MCP disabled (isolation test) | Chat works! 200 response but 60s hang — `finalMessage()` issue |
 
 ---
 
