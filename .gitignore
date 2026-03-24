@@ -39,8 +39,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-# personal project notes — keep off GitHub
-jmangali-project1-notes.md
-jmangali-vibe-coding-notes.md
-jmangali-the-one-about-friends.md
-jmangali-auth0-fga-policy-doc.md
+# personal project notes & diagnostics — keep off GitHub
+jmangali-*/
+jmangali-*.md
