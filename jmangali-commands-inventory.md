@@ -23,6 +23,8 @@ Update this file after each session.
 | `fc8afc6` | 2026-03-24 | test: disable MCP temporarily to isolate Anthropic 500 |
 | `ea92d62` | 2026-03-24 | docs: add commands inventory |
 | `1405f52` | 2026-03-24 | fix: iterate stream events directly to close response immediately after end_turn |
+| `c19fb6b` | 2026-03-24 | feat: nav profile link, tenant name + FGA links on My Permissions page |
+| `f90a41c` | 2026-03-24 | feat: Ask Phoenix CTA + one-tool-per-turn rule + loading indicator (3-change commit) |
 
 ### auth0-fastmcp-fga
 
