@@ -31,40 +31,63 @@ export default function Permissions() {
 
       {error && <ErrorMessage>{error.message}</ErrorMessage>}
 
-      {data?.error && <ErrorMessage>{data.error}</ErrorMessage>}
-
-      {data && !data.error && (
-        <>
-          <p className="text-muted mb-4">
-            Logged in as <strong>{data.user}</strong>
-          </p>
-
-          <table className="table" data-testid="permissions-table">
-            <thead>
-              <tr>
-                <th>Tool</th>
-                <th>What it does</th>
-                <th>Who can use it</th>
-                <th>You</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.permissions.map(tool => (
-                <tr key={tool.name}>
-                  <td><code>{tool.name}</code></td>
-                  <td>{tool.description}</td>
-                  <td><small className="text-muted">{tool.roles}</small></td>
-                  <td>
-                    {tool.allowed
-                      ? <span style={{ color: '#28a745', fontWeight: 600 }}>✓ Allowed</span>
-                      : <span style={{ color: '#dc3545' }}>✗ Denied</span>
-                    }
-                  </td>
+      {data && !data.error && (() => {
+        const hasAccess = data.permissions?.some(t => t.allowed);
+        if (!hasAccess) {
+          return (
+            <div className="text-center py-5">
+              <p style={{ fontSize: '2rem' }}>💬</p>
+              <h4>You have access to ask Phoenix questions!</h4>
+              <p className="text-muted">
+                Your role does not include direct tenant management tools, but Phoenix can still help you with NIST compliance, Auth0 configuration guidance, and authentication design questions.
+              </p>
+              <a href="/askphoenix" className="btn btn-primary mt-2">Ask Phoenix</a>
+            </div>
+          );
+        }
+        return (
+          <>
+            <p className="text-muted mb-4">
+              Logged in as <strong>{data.user}</strong>
+            </p>
+            <table className="table" data-testid="permissions-table">
+              <thead>
+                <tr>
+                  <th>Tool</th>
+                  <th>What it does</th>
+                  <th>Who can use it</th>
+                  <th>You</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
+              </thead>
+              <tbody>
+                {data.permissions.map(tool => (
+                  <tr key={tool.name}>
+                    <td><code>{tool.name}</code></td>
+                    <td>{tool.description}</td>
+                    <td><small className="text-muted">{tool.roles}</small></td>
+                    <td>
+                      {tool.allowed
+                        ? <span style={{ color: '#28a745', fontWeight: 600 }}>✓ Allowed</span>
+                        : <span style={{ color: '#dc3545' }}>✗ Denied</span>
+                      }
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        );
+      })()}
+
+      {data?.error && (
+        <div className="text-center py-5">
+          <p style={{ fontSize: '2rem' }}>💬</p>
+          <h4>You have access to ask Phoenix questions!</h4>
+          <p className="text-muted">
+            Your role does not include direct tenant management tools, but Phoenix can still help you with NIST compliance, Auth0 configuration guidance, and authentication design questions.
+          </p>
+          <a href="/askphoenix" className="btn btn-primary mt-2">Ask Phoenix</a>
+        </div>
       )}
     </div>
   );

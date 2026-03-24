@@ -194,7 +194,12 @@ export default function CSRPage() {
                 {msg.role === 'user' ? (
                   msg.content
                 ) : (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content || (isStreaming && i === messages.length - 1 ? '▍' : '')}</ReactMarkdown>
+                  <>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content || (isStreaming && i === messages.length - 1 ? '...' : '')}</ReactMarkdown>
+                    {isStreaming && i === messages.length - 1 && !msg.content
+                      ? <p style={{ fontSize: '0.75rem', color: '#6c757d', margin: '4px 0 0' }}>Phoenix is thinking — this may take a moment if tenant data is being fetched...</p>
+                      : null}
+                  </>
                 )}
               </div>
             </div>
