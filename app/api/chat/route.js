@@ -126,7 +126,7 @@ export async function POST(request) {
               system: SYSTEM_PROMPT + openingInstruction,
               ...(mcpServers.length > 0 && { mcp_servers: mcpServers }),
               messages: currentMessages,
-              betas: ['mcp-client-2025-04-04'],
+              ...(mcpServers.length > 0 && { betas: ['mcp-client-2025-04-04'] }),
             });
 
             stream.on('text', (text) => {
