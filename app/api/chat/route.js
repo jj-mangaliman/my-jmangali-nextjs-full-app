@@ -125,23 +125,32 @@ export async function POST(request) {
               ...(mcpServers.length > 0 && { betas: ['mcp-client-2025-04-04'] }),
             });
 
-            stream.on('text', (text) => {
-              controller.enqueue(encoder.encode(text));
-            });
+            let stopReason = null;
 
-            const message = await stream.finalMessage();
+            for await (const event of stream) {
+              if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+                controller.enqueue(encoder.encode(event.delta.text));
+              }
+              if (event.type === 'message_delta') {
+                stopReason = event.delta?.stop_reason;
+              }
+              if (event.type === 'message_stop') break;
+            }
 
-            console.log(`[chat] stop_reason: ${message.stop_reason}`);
+            console.log(`[chat] stop_reason: ${stopReason}`);
 
-            if (message.stop_reason === 'end_turn') break;
+            if (stopReason === 'end_turn' || !stopReason) break;
 
             // Server-side tool hit iteration limit — append and continue
-            if (message.stop_reason === 'pause_turn') {
+            if (stopReason === 'pause_turn') {
               console.log(`[chat] pause_turn — continuation ${continuations + 1}`);
-              currentMessages = [
-                ...currentMessages,
-                { role: 'assistant', content: message.content },
-              ];
+              const accumulated = await stream.finalMessage().catch(() => null);
+              if (accumulated) {
+                currentMessages = [
+                  ...currentMessages,
+                  { role: 'assistant', content: accumulated.content },
+                ];
+              }
               continuations++;
               continue;
             }
