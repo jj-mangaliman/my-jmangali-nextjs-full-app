@@ -75,6 +75,11 @@ const NavBar = () => {
                       My Permissions
                     </PageLink>
                   </NavItem>
+                  <NavItem>
+                    <PageLink href="/okta-migration" className="nav-link" testId="navbar-okta-migration">
+                      Okta Migration
+                    </PageLink>
+                  </NavItem>
                 </>
               )}
             </Nav>
