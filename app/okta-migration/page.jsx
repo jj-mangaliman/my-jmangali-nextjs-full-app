@@ -72,9 +72,39 @@ export default function OktaMigrationPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ extracted: extracted.extracted }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Analysis failed');
-      setResult(data.mapping);
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Analysis failed');
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let raw = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        raw += decoder.decode(value, { stream: true });
+      }
+
+      if (raw.includes('__ERROR__')) {
+        throw new Error(raw.replace('__ERROR__', ''));
+      }
+
+      let mapping;
+      try {
+        mapping = JSON.parse(raw);
+      } catch {
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          mapping = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('Phoenix returned unparseable output. Try again.');
+        }
+      }
+
+      setResult(mapping);
       setFilterCategory('All');
       setFilterConfidence('All');
     } catch (err) {

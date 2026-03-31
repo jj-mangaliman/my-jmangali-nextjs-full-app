@@ -130,34 +130,44 @@ export async function POST(request) {
     }
 
     const slim = summarizeExtracted(extracted);
+    const encoder = new TextEncoder();
 
-    const response = await client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 16000,
-      system: MIGRATION_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: 'user',
-          content: `Analyze this extracted Okta tenant configuration and produce the Auth0 migration mapping JSON.\n\nExtracted Okta Configuration:\n${JSON.stringify(slim, null, 2)}`,
-        },
-      ],
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          const stream = client.messages.stream({
+            model: 'claude-opus-4-6',
+            max_tokens: 16000,
+            system: MIGRATION_SYSTEM_PROMPT,
+            messages: [
+              {
+                role: 'user',
+                content: `Analyze this extracted Okta tenant configuration and produce the Auth0 migration mapping JSON.\n\nExtracted Okta Configuration:\n${JSON.stringify(slim, null, 2)}`,
+              },
+            ],
+          });
+
+          for await (const event of stream) {
+            if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+              controller.enqueue(encoder.encode(event.delta.text));
+            }
+            if (event.type === 'message_stop') break;
+          }
+        } catch (err) {
+          controller.enqueue(encoder.encode(`__ERROR__${err.message}`));
+        } finally {
+          controller.close();
+        }
+      },
     });
 
-    const rawText = response.content[0]?.text || '';
-
-    let mapping;
-    try {
-      mapping = JSON.parse(rawText);
-    } catch {
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        mapping = JSON.parse(jsonMatch[0]);
-      } else {
-        return Response.json({ error: 'Phoenix returned unparseable output', raw: rawText }, { status: 500 });
-      }
-    }
-
-    return Response.json({ mapping });
+    return new Response(readableStream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
