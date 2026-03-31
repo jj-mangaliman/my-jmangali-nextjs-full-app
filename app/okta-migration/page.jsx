@@ -35,20 +35,49 @@ const ENDPOINT_LABELS = {
 
 export default function OktaMigrationPage() {
   const { user, isLoading } = useUser();
-  const [extracting, setExtracting]     = useState(false);
-  const [analyzing, setAnalyzing]       = useState(false);
-  const [extracted, setExtracted]       = useState(null);
-  const [result, setResult]             = useState(null);
-  const [error, setError]               = useState(null);
-  const [filterCategory, setFilterCategory]       = useState('All');
-  const [filterConfidence, setFilterConfidence]   = useState('All');
+  const [extracting, setExtracting]   = useState(false);
+  const [analyzing, setAnalyzing]     = useState(false);
+  const [extracted, setExtracted]     = useState(null);
+  const [tfContent, setTfContent]     = useState(null);
+  const [tfFileName, setTfFileName]   = useState(null);
+  const [result, setResult]           = useState(null);
+  const [error, setError]             = useState(null);
+  const [filterCategory, setFilterCategory]     = useState('All');
+  const [filterConfidence, setFilterConfidence] = useState('All');
 
   if (isLoading) return <Loading />;
+
+  function handleTfUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith('.tf')) {
+      setError('Only .tf files are accepted. Please upload a Terraform configuration file.');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      setTfContent(evt.target.result);
+      setTfFileName(file.name);
+      setExtracted(null);
+      setResult(null);
+      setError(null);
+    };
+    reader.readAsText(file);
+  }
+
+  function clearTfFile() {
+    setTfContent(null);
+    setTfFileName(null);
+    setResult(null);
+  }
 
   async function runExtract() {
     setExtracting(true);
     setError(null);
     setExtracted(null);
+    setTfContent(null);
+    setTfFileName(null);
     setResult(null);
     try {
       const res = await fetch('/api/okta-migration/extract');
@@ -66,11 +95,14 @@ export default function OktaMigrationPage() {
     setAnalyzing(true);
     setError(null);
     setResult(null);
+    const body = tfContent
+      ? JSON.stringify({ tfContent })
+      : JSON.stringify({ extracted: extracted.extracted });
     try {
       const res = await fetch('/api/okta-migration/map', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ extracted: extracted.extracted }),
+        body,
       });
 
       if (!res.ok) {
@@ -197,37 +229,83 @@ export default function OktaMigrationPage() {
           )}
         </div>
         <p className="text-muted" style={{ marginBottom: '24px' }}>
-          Extract your Okta tenant configuration and let Phoenix map each resource to its Auth0 equivalent —
-          with confidence levels and rationale for each mapping.
+          Provide your Okta configuration — either by extracting live from your tenant via the API, or by uploading
+          a Terraform plan. Phoenix will map each resource to its Auth0 equivalent with confidence levels and rationale.
         </p>
 
-        {/* Step 1 — Extract */}
-        <div style={{ marginBottom: '20px' }}>
-          <button
-            className="btn btn-primary"
-            onClick={runExtract}
-            disabled={extracting || analyzing}
-            style={{ backgroundColor: '#ffb700', borderColor: '#ffb700', color: '#000', fontWeight: 600 }}
-          >
-            {extracting ? 'Extracting...' : extracted ? 'Re-extract from Okta' : 'Extract Okta Configuration'}
-          </button>
-          {extracting && (
-            <span className="text-muted" style={{ marginLeft: '12px', fontSize: '0.85rem' }}>
-              Reading apps, groups, policies, IdPs, hooks, branding from your Okta org...
-            </span>
-          )}
+        {/* Step 1 — Two input paths */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '16px', alignItems: 'start', marginBottom: '24px' }}>
+
+          {/* Path A — Live API */}
+          <div style={{ border: '1px solid #dee2e6', borderRadius: '8px', padding: '16px' }}>
+            <h6 style={{ fontWeight: 700, marginBottom: '4px' }}>Option A — Live Okta API</h6>
+            <p className="text-muted" style={{ fontSize: '0.82rem', marginBottom: '12px' }}>
+              Reads directly from your configured Okta tenant using the API token in environment variables.
+            </p>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={runExtract}
+              disabled={extracting || analyzing}
+              style={{ backgroundColor: '#ffb700', borderColor: '#ffb700', color: '#000', fontWeight: 600 }}
+            >
+              {extracting ? 'Extracting...' : extracted ? 'Re-extract from Okta' : 'Extract Okta Configuration'}
+            </button>
+            {extracting && (
+              <p className="text-muted" style={{ fontSize: '0.8rem', marginTop: '8px', marginBottom: 0 }}>
+                Reading apps, groups, policies, IdPs, hooks, branding...
+              </p>
+            )}
+            {extracted && !extracting && (
+              <p style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '8px', marginBottom: 0 }}>
+                ✓ Extracted from <code>{extracted.domain}</code>
+              </p>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '32px' }}>
+            <div style={{ width: '1px', height: '24px', background: '#dee2e6' }} />
+            <span style={{ fontSize: '0.75rem', color: '#adb5bd', fontWeight: 700, padding: '4px 0' }}>OR</span>
+            <div style={{ width: '1px', height: '24px', background: '#dee2e6' }} />
+          </div>
+
+          {/* Path B — Terraform upload */}
+          <div style={{ border: '1px solid #dee2e6', borderRadius: '8px', padding: '16px' }}>
+            <h6 style={{ fontWeight: 700, marginBottom: '4px' }}>Option B — Upload Terraform Plan</h6>
+            <p className="text-muted" style={{ fontSize: '0.82rem', marginBottom: '12px' }}>
+              Upload an Okta Terraform configuration file. <strong>Accepts .tf files only.</strong>
+            </p>
+            {!tfContent ? (
+              <label style={{ cursor: 'pointer' }}>
+                <input
+                  type="file"
+                  accept=".tf"
+                  onChange={handleTfUpload}
+                  disabled={analyzing}
+                  style={{ display: 'none' }}
+                />
+                <span className="btn btn-outline-dark btn-sm">Choose .tf file</span>
+              </label>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.82rem', color: '#10b981' }}>✓ {tfFileName}</span>
+                <button className="btn btn-outline-secondary btn-sm" onClick={clearTfFile} disabled={analyzing}>
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Extraction results */}
+        {/* API extraction summary — only shown in API mode */}
         {extracted && (
-          <div style={{ marginBottom: '24px' }}>
-            <h5 style={{ marginBottom: '4px' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <h6 style={{ marginBottom: '4px' }}>
               Extracted from <code>{extracted.domain}</code>{' '}
               <small className="text-muted" style={{ fontWeight: 400 }}>
                 {new Date(extracted.extractedAt).toLocaleString()}
               </small>
-            </h5>
-
+            </h6>
             <div className="summary-grid">
               {summaryEntries.map(({ label, count }) => (
                 <div key={label} className="summary-card">
@@ -236,14 +314,17 @@ export default function OktaMigrationPage() {
                 </div>
               ))}
             </div>
-
             {Object.keys(extracted.errors || {}).length > 0 && (
               <div className="alert alert-warning" style={{ fontSize: '0.82rem', marginBottom: '12px' }}>
                 <strong>Some endpoints failed:</strong> {Object.entries(extracted.errors).map(([k, v]) => `${k} (${v})`).join(' · ')}
               </div>
             )}
+          </div>
+        )}
 
-            {/* Step 2 — Analyze */}
+        {/* Step 2 — Generate mapping (shown when either source is ready) */}
+        {(extracted || tfContent) && (
+          <div style={{ marginBottom: '24px' }}>
             <button
               className="btn btn-dark"
               onClick={runAnalysis}

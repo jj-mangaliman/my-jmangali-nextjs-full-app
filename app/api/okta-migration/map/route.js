@@ -128,12 +128,17 @@ export async function POST(request) {
       return Response.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { extracted } = await request.json();
-    if (!extracted) {
-      return Response.json({ error: 'extracted config is required' }, { status: 400 });
+    const body = await request.json();
+    const { extracted, tfContent } = body;
+
+    if (!extracted && !tfContent) {
+      return Response.json({ error: 'Either extracted config or tfContent is required' }, { status: 400 });
     }
 
-    const slim = summarizeExtracted(extracted);
+    const userMessage = tfContent
+      ? `Analyze this Okta Terraform configuration (.tf file) and produce the Auth0 migration mapping JSON.\n\nThe input is HashiCorp Configuration Language (HCL). Parse each resource block to identify the Okta resource type and its configuration, then map each to its Auth0 equivalent.\n\nOkta Terraform Configuration:\n${tfContent}`
+      : `Analyze this extracted Okta tenant configuration and produce the Auth0 migration mapping JSON.\n\nExtracted Okta Configuration:\n${JSON.stringify(summarizeExtracted(extracted), null, 2)}`;
+
     const encoder = new TextEncoder();
 
     const readableStream = new ReadableStream({
@@ -144,10 +149,7 @@ export async function POST(request) {
             max_tokens: 16000,
             system: MIGRATION_SYSTEM_PROMPT,
             messages: [
-              {
-                role: 'user',
-                content: `Analyze this extracted Okta tenant configuration and produce the Auth0 migration mapping JSON.\n\nExtracted Okta Configuration:\n${JSON.stringify(slim, null, 2)}`,
-              },
+              { role: 'user', content: userMessage },
             ],
           });
 
