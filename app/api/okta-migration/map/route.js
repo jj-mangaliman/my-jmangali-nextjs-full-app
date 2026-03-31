@@ -61,7 +61,11 @@ Your task is to analyze an extracted Okta tenant configuration and produce a pre
 
 ## Output Instructions
 
-You MUST respond with ONLY a valid JSON object. No markdown fences, no preamble, no trailing text. Produce one mapping entry per distinct Okta resource instance found in the config (not per category). If a category has zero resources extracted, omit it.
+You MUST respond with ONLY a valid JSON object. No markdown fences, no preamble, no trailing text.
+
+**Group by resource type/pattern — do NOT produce one row per instance.** If 12 apps all share the same signOnMode and map to the same Auth0 equivalent, that is ONE row. Include the count and 2-3 representative names. This keeps the output concise and actionable for migration planning. If a category has zero resources extracted, omit it.
+
+Keep every string field to one sentence maximum.
 
 The exact JSON structure:
 
@@ -71,13 +75,13 @@ The exact JSON structure:
   "mappings": [
     {
       "category": "Applications|IdPs|Policies|Groups|Authorization Servers|Hooks|Branding|Features",
-      "oktaResource": "specific name and type of this Okta resource",
-      "objective": "what this Okta resource does and why an org typically has it — explain its purpose and business intent in 1-2 plain-language sentences, as if briefing someone unfamiliar with Okta",
-      "oktaConfig": "explain what this resource's configuration enables or enforces — not just the raw values, but what behaviour or outcome they produce for users or developers (1-2 plain-language sentences)",
+      "oktaResource": "resource type/pattern and count (e.g. 'OIDC Web Apps (12)', 'SAML 2.0 Apps (3)')",
+      "objective": "what this type of Okta resource does and why orgs have it — one plain-language sentence",
+      "oktaConfig": "what the configuration for this resource type enables or enforces — one plain-language sentence",
       "auth0Equivalent": "specific Auth0 resource or feature name",
-      "auth0Config": "how to configure this in Auth0 (1-2 sentences)",
+      "auth0Config": "how to configure this in Auth0 — one sentence",
       "confidence": "High|Medium|Low|No Match",
-      "rationale": "specific reason for this confidence level — name any gaps, caveats, or limitations"
+      "rationale": "one sentence — specific reason for this confidence level, naming any gaps or caveats"
     }
   ],
   "gaps": ["specific Okta features or configurations with no Auth0 equivalent"],
